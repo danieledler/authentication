@@ -1,3 +1,5 @@
+import decircularize from 'decircularize';
+
 // Returns a promise that resolves when the socket is connected
 export function connected(app) {
   return new Promise((resolve, reject) => {
@@ -32,7 +34,10 @@ export function authenticateSocket(options, socket, method) {
     socket.once('unauthorized', reject);
     socket.once('authenticated', resolve);
 
-    socket[method]('authenticate', options);
+    const safeOptions = decircularize(options);
+    // socket[method]('authenticate', options);
+    console.log('%%%%%%%%%%%% socket.emit("authenticate":', safeOptions);
+    socket[method]('authenticate', safeOptions);
   });
 }
 

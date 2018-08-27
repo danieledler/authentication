@@ -340,6 +340,25 @@ describe('Middleware', () => {
           expect(MockNext).to.have.been.calledOnce;
         });
       });
+
+      describe('when request contains circular references', () => {
+        it('calls next', () => {
+          const circular = {
+            foo: {
+              bar: 'baz',
+            },
+          };
+          circular.foo.parent = circular.foo;
+          const req = Object.assign({}, MockRequest, {
+            feathers: {
+              circular,
+            }
+          });
+
+          middleware.failedLogin(options)(MockError, req, MockResponse, MockNext);
+          expect(MockNext).to.have.been.calledOnce;
+        });
+      });
     });
 
     describe('with valid options and redirecting', () => {

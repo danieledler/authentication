@@ -21,6 +21,14 @@ const settings = {
     secret: 'feathers-rocks'
   }
 };
+
+const circular = {
+  foo: {
+    bar: 'baz',
+  },
+};
+circular.foo.parent = circular.foo;
+
 const setupTests = initApp => {
   let app;
 
@@ -39,6 +47,23 @@ const setupTests = initApp => {
 
         done();
       }).catch(done);
+  });
+
+  it('local authentication with circular data object passes socket serialization', done => {
+    app.authenticate({
+        type: 'local',
+        email,
+        password: 'this is wrong',
+        circular,
+      })
+      .then(() => done(new Error('Should never get here')))
+      .catch(error => {
+        expect(error.name).to.not.equal('RangeError');
+        expect(error.message).to.not.equal('Maximum call stack size exceeded');
+        expect(error.name).to.equal('NotAuthenticated');
+        expect(error.code).to.equal(401);
+        done();
+      });
   });
 
   it('local username password authentication and access to protected service', done => {

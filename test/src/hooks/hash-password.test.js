@@ -171,4 +171,4 @@ describe('hashPassword', () => {
       });
     });
   });
-});
+}).timeout(10000);

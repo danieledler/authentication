@@ -1,12 +1,26 @@
 import Debug from 'debug';
 import errors from 'feathers-errors';
+const decircularize = require('decircularize');
 
 const debug = Debug('feathers-authentication:middleware');
+
+// function decircularizeFields(obj, fields = []) {
+//   fields.forEach(field => {
+//     if (typeof obj[field] === 'object') {
+//       obj[field] = decircularize(obj[field]);
+//     }
+//   });
+// }
 
 function setupSocketHandler(feathersParams, provider, emit, app, options) {
   return function(socket) {
     let errorHandler = function(error) {
-      socket[emit]('unauthorized', error, function(){
+      // decircularizeFields(error, ['req', 'service']);
+      const safeError = decircularize(error);
+      // debug('safeError:', safeError);
+      console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 1 emit safe error:', safeError);
+      // socket[emit]('unauthorized', error, function(){
+      socket[emit]('unauthorized', safeError, function(){
         // TODO (EK): Maybe we support disconnecting the socket
         // if a certain number of authorization attempts have failed
         // for brute force protection
@@ -14,6 +28,7 @@ function setupSocketHandler(feathersParams, provider, emit, app, options) {
       });
 
       throw error;
+      // throw safeError;
     };
 
     // Expose the request object to services and hooks
@@ -34,7 +49,10 @@ function setupSocketHandler(feathersParams, provider, emit, app, options) {
         app.service(options.tokenEndpoint).create({}, params).then(response => {
           feathersParams(socket).token = response.token;
           feathersParams(socket).user = response.data;
-          socket[emit]('authenticated', response);
+          const safeResponse = decircularize(response);
+          console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 2 emit safe response:', safeResponse);
+          socket[emit]('authenticated', safeResponse);
+          // socket[emit]('authenticated', response);
         }).catch(errorHandler);
       }
       // Authenticate the user using local auth strategy
@@ -49,7 +67,10 @@ function setupSocketHandler(feathersParams, provider, emit, app, options) {
         app.service(options.localEndpoint).create(data, params).then(response => {
           feathersParams(socket).token = response.token;
           feathersParams(socket).user = response.data;
-          socket[emit]('authenticated', response);
+          const safeResponse = decircularize(response);
+          console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 3 emit safe response:', safeResponse);
+          socket[emit]('authenticated', safeResponse);
+          // socket[emit]('authenticated', response);
         }).catch(errorHandler);
       }
     });
